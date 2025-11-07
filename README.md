@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="./gopher.svg" height="200px" width="200px" alt="gopher"  >
+</p>
+
 # Aprende Go (Golang)
 
 ### Consideraciones
