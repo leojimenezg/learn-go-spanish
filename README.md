@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./gopher.svg" height="200px" width="200px" alt="gopher"  >
+    <img src="./learn-gopher-nbg.png" height="200px" width="200px" alt="gopher"  >
 </p>
 
 # Aprende Go (Golang)
