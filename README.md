@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./learn-gopher-nbg.png" height="200px" width="200px" alt="gopher"  >
+    <img src="./learn-gopher-nbg.png" height="300px" width="200px" alt="gopher" >
 </p>
 
 # Aprende Go (Golang)
@@ -7,7 +7,7 @@
 ### Consideraciones
 
 **Sobre el contenido:**
-- Todo el material está basado en los recursos oficiales de Go listados en [Referencias](#referencias)
+- Todo el material está basado en los recursos oficiales de Go listados en la sección de Referencias
 - El contenido se presenta resumido y simplificado para tratar de facilitar el aprendizaje
 - Algunos conceptos se repiten en diferentes secciones con distintos niveles de profundidad, reflejando la naturaleza de los recursos originales
 - Los recursos originales están en inglés; la traducción busca ser precisa pero puede contener interpretaciones personales
@@ -15,9 +15,248 @@
 **Sobre este repositorio:**
 - **NO es un curso formal**, sino una documentación personal de mi propio aprendizaje de Go
 - Puede contener imprecisiones o interpretaciones personales de los conceptos
-- Ante cualquier duda, consulta siempre los [recursos oficiales](#referencias)
+- Ante cualquier duda, consulta siempre los recursos oficiales
 
 ¡Disfruta tu aprendizaje!
+
+---
+
+# Índice
+
+## Sección 1: A Tour Of Go
+
+### Lo básico
+
+- Paquetes
+- Nombres exportados (públicos y privados)
+- Funciones
+  - Funciones como valores
+  - Funciones closure
+- Variables
+- Valores cero (Zero values)
+- Tipos básicos
+- Conversión de tipo
+- Constantes
+- Constantes numéricas
+- Bucles
+  - Bucle for
+  - Bucle while
+- Condición if
+- Switch
+- Defer
+- Punteros
+- Structs
+- Arreglos
+- Slices
+- Mapas
+- Range
+
+### Métodos e Interfaces
+
+- Métodos
+- Interfaces
+- Aserción de tipos
+- Switches de tipo
+- Stringers
+- Errores
+- Lectores
+- Escritores
+- Imágenes
+
+### Genéricos
+
+- Tipos de parámetro
+- Tipos genéricos
+
+### Concurrencia
+
+- Rutinas go
+- Canales
+- Canales con buffer
+- Range y Close
+- Select
+
+## Sección 2: How to Write Go Code
+
+- Organización del código
+- Tu primer programa
+  - Importar paquetes del mismo módulo
+  - Importar paquetes de módulos externos
+- Pruebas
+
+## Sección 3: The Go Programming Language Specification
+
+### Introducción
+
+### Representación del código fuente
+
+### Elementos léxicos
+
+- Comentarios
+- Tokens
+- Punto y coma
+- Identificadores
+- Palabras reservadas
+- Operadores y puntuación
+- Enteros literales
+- Puntos-flotantes literales
+- Imaginarios literales
+- Rune literales
+- String literales
+
+### Constantes
+
+### Variables
+
+### Tipos
+
+- Tipo booleano
+- Tipo numérico
+- Tipo string
+- Tipo arreglo
+- Tipo slice
+- Tipo struct
+- Tipo puntero
+- Tipo función
+- Tipos interfaz
+  - Interfaces básicas
+  - Interfaces embebidas
+  - Interfaces genéricas
+- Tipo mapa
+- Tipo canal
+
+### Propiedades de tipos y valores
+
+- Representación de valores
+- Tipos subyacentes
+- Tipos base
+- Identidad del tipo
+- Asignabilidad
+- Representabilidad
+- Conjunto de métodos
+
+### Bloques
+
+### Declaraciones y alcance
+
+- Alcance de etiquetas
+- Identificador en blanco
+- Identificadores predeclarados
+- Identificadores exportados
+- Unicidad de los identificadores
+- Declaración de constantes
+- Iota
+- Declaraciones de tipo
+  - Declaración de alias
+  - Definición de tipos
+- Declaración de tipos de parámetro
+  - Restricciones de tipo
+  - Cumplimiento de las restricciones de tipo
+- Declaración de variables
+- Declaración corta de variables
+- Declaración de funciones
+- Declaración de métodos
+
+### Expresiones
+- Operandos
+- Identificadores calificados
+- Literales compuestos
+- Funciones literales
+- Expresiones primarias
+- Selectores
+- Expresiones de métodos
+- Valores de métodos
+- Expresiones de índice
+- Expresiones de slice
+  - Expresiones de slice simples
+  - Expresiones de slice completas
+- Aserción de tipos
+- Expresión de llamadas
+- Pasando argumentos a parámetros "..."
+- Instanciaciones
+- Inferencia de tipos
+  - Unificación de tipos
+- Operadores
+  - Precedencia de operadores
+- Operadores aritméticos
+  - Operadores de enteros
+  - Desbordamiento de enteros
+  - Operadores de punto-flotante
+  - Concatenación de strings
+- Operadores de comparación
+- Operadores lógicos
+- Operadores de dirección
+- Operador de recepción
+- Conversiones
+  - Conversiones entre tipos numéricos
+  - Conversiones de y hacia tipos string
+  - Conversiones de slice a arreglo
+- Expresiones constantes
+- Orden de evaluación
+
+### Sentencias
+
+- Sentencias de terminación
+- Sentencias vacías
+- Sentencias etiquetadas
+- Sentencias expresivas
+- Sentencias de envío
+- Sentencias de incremento/decremento
+- Sentencias de asignación
+- Sentencias if
+- Sentencias switch
+  - Switch de expresión
+  - Switch de tipo
+- Sentencias for
+  - Sentencias for con una única condición
+  - Sentencias for completas
+  - Sentencias for usando range
+- Sentencias go
+- Sentencias select
+- Sentencias return
+- Sentencias break
+- Sentencias continue
+- Sentencias goto
+- Sentencias fallthrough
+- Sentencias defer
+
+### Funciones integradas
+
+- Añadir a y copiar slices
+- Clear
+- Close
+- Manipulación de números complejos
+- Eliminación de elementos de un mapa
+- Longitud y capacidad
+- Crear mapas, slices y canales
+- Mínimo y máximo
+- Asignación de memoria
+- Gestionar pánicos
+- Arranque
+
+### Paquetes
+
+- Optimización de archivos fuente
+- Package
+- Declaraciones de importación
+
+### Inicialización y ejecución de un programa
+
+- El valor cero
+- Inicialización de un paquete
+- Inicialización de un programa
+- Ejecución de un programa
+
+### Errores
+
+### Pánicos en tiempo de ejecución
+
+### Consideraciones de sistema
+
+- Paquete unsafe
+- Garantías de tamaño y alineación
+
+### Referencias
 
 ---
 
