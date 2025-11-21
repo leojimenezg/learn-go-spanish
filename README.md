@@ -256,7 +256,13 @@
 - Paquete unsafe
 - Garantías de tamaño y alineación
 
-### Referencias
+## Sección 4: Effective Go
+
+### Formateo
+
+### Comentarios
+
+## Referencias
 
 ---
 
@@ -2447,8 +2453,62 @@ Además, las garantías de alineación mínima son:
 
 Estas garantías permiten escribir código que dependa de representaciones específicas de memoria cuando sea absolutamente necesario.
 
+# Sección 4: Effective Go
+
+## Formateo
+
+Un problema recurrente en programación es la inconsistencia en estilos de código. Go resuelve esto delegando el trabajo de formateo a herramientas automáticas, eliminando debates sobre preferencias personales.
+
+El programa `gofmt` (o `go fmt` como comando integrado) formatea código Go de manera automática y consistente. Opera a nivel de paquete, asegurando que todos los archivos en un paquete mantengan el mismo estilo, en lugar de formatear archivos de forma aislada.
+
+`gofmt` no siempre es "perfecto" en el sentido de que puede no alinearse con las preferencias personales de estilo, pero su propósito no es complacerlas, sino imponer un estándar consistente a nivel de paquete.
+
+Los siguientes son los aspectos que `gofmt` normaliza:
+- **Indentación:** usa tabs por defecto en lugar de espacios
+- **Espacios en blanco:** ajusta espacios en expresiones, alineación de campos y comentarios
+- **Paréntesis:** mantiene solo la menor cantidad necesaria 
+- **Alineación:** alinea elementos para mejorar legibilidad
+- **Longitud de línea:** Go no impone una longitud máxima de línea estándar
+
+Ejemplo:
+- Antes de usar `go fmt`:
+    ```Go
+    type T struct {
+        nombre string // Comentario 1
+        edad int // Comentario 2
+    }
+    ```
+- Usar el programa para formatear el código:
+    ```bash
+    go fmt .
+    ```
+- Después de usar `go fmt`:
+    ```go
+    type T struct {
+        nombre string // Comentario 1
+        edad   int    // Comentario 2
+    }
+    ```
+
+## Comentarios
+
+Go soporta comentarios de bloque al estilo C (`/* */`) y comentarios de una sola línea (`//`). Los comentarios de una línea son la norma; los de bloque se usan típicamente para comentarios de paquete o para desactivar grandes bloques de código.
+
+Todo comentario que aparezca inmediatamente antes de una declaración (sin líneas en blanco intermedias) se convierte en comentario de documentación para esa declaración. Estos forman la documentación primaria de un paquete. Sin embargo, solo las declaraciones exportadas (que comienzan con letra mayúscula) generan documentación pública. Las no exportadas también pueden tener comentarios de documentación, pero solo son visibles internamente.
+
+Además, existen herramientas como `godoc` o `go doc`, que procesan automáticamente estos comentarios y genera documentación accesible desde diversos lugares (terminal, web, IDEs, etc.).
+
+**Convenciones de comentarios de documentación:**
+- **Empezar con el nombre:** Debe comenzar con el nombre de lo que está documentando
+- **Oración completa:** Debe terminar con punto final
+- **Conciso y descriptivo:** Debe explicar el propósito, no el código
+- **Múltiples párrafos:** Debe usar comentarios de una línea (`//`) y separar las explicaciones con comentarios en blanco
+
+## Nombres
+
 ## Referencias
 - ["Documentation"](https://go.dev/doc/)
 - ["A Tour of Go"](https://go.dev/tour)
 - ["How to Write Go Code"](https://go.dev/doc/code)
 - ["The Go Programming Language Specification"](https://go.dev/ref/spec)
+- ["Effective Go"](https://go.dev/doc/effective_go)
