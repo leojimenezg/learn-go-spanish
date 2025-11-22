@@ -271,6 +271,14 @@
 
 ### Punto y coma
 
+### Estructuras de control
+
+- If
+- Re-declaración y re-asignación
+- For
+- Switch
+- Switch de tipo
+
 ## Referencias
 
 ---
@@ -2526,7 +2534,7 @@ Cuando un paquete se importa, su nombre se convierte en un identificador calific
 - No necesitan ser únicos globalmente; si hay colisiones, asigna un alias local
 - El nombre del paquete corresponde a la **última parte de la ruta**: `encoding/base64` se importa como tal, pero el nombre es `base64`
 
-La ventaja de estas convenciones es que el nombre del paquete proporciona contexto claro. Múltiples paquetes pueden exportar `Reader` sin conflicto: `io.Reader` vs `bufio.Reader` son distintos.
+La ventaja de estas convenciones es que el nombre del paquete proporciona contexto claro. Por ejemplo, múltiples paquetes pueden exportar `Reader` sin conflicto: `io.Reader` vs `bufio.Reader` son distintos.
 
 ### Getters y Setters
 
@@ -2618,9 +2626,132 @@ Ejemplo:
 
 En el segundo caso, se inserta `;` después de `f()`, dejando las llaves desligadas de la condición.
 
-## Estructuras de control
+## Estructuras de Control
+
+Las estructuras de control en Go están relacionadas con las de C, pero difieren en puntos importantes. Go no requiere paréntesis en la sintaxis de estructuras de control, pero sus cuerpos **deben estar siempre entre llaves**.
+
+**Características generales:**
+- No hay bucles `while` o `do while`, solo un bucle `for` generalizado
+- Tanto `if` como `switch` aceptan una sentencia de inicialización opcional, similar a la de `for`
+- Las sentencias `break` y `continue` aceptan etiquetas opcionales para identificar su acción
+- Nueva estructura de control: `select`
+
+### If
+
+Un simple `if`:
+```go
+if x > 0 {
+    return y
+}
+```
+
+Con inicialización (la variable existe solo dentro de su bloque if):
+```go
+if err := file.Chmod(0664); err != nil {
+    log.Print(err)
+    return err
+}
+```
+
+Las llaves obligatorias fomentan sentencias simples en múltiples líneas. Es común omitir `else` en sentencias `if` que limitan el flujo, ya que resulta innecesario.
+
+### Re-declaración y re-asignación
+
+En declaraciones cortas (`:=`) dentro del mismo bloque, se pueden mezclar variables nuevas y existentes. Las nuevas se **declaran**, mientras que las existentes se **reasignan**:
+```go
+if err := someFunc(); err != nil {
+    f, err := os.Open("file")  // f se declara, err se reasigna aquí
+    // ...
+}
+```
+
+Esto es idiomático y reduce la necesidad de nuevos nombres de variables, especialmente útil para variables como `err`.
+
+### For
+
+La sentencia `for` generaliza todos los bucles, y puede tomar tres formas:
+- **Forma completa:**
+    ```go
+    for pre; condición; post { }
+    ```
+- **Forma while (solo condición):**
+    ```go
+    for condición { }
+    ```
+- **Forma infinita:**
+    ```go
+    for { }
+    ```
+
+La palabra reservada `range` gestiona bucles sobre arreglos, slices, strings, mapas o canales, y devuelve valores según el tipo:
+- **Slice/Arreglo**: índice y valor
+- **Mapa**: clave y valor
+- **String**: índice (posición de byte) y rune
+- **Canal**: solo valor
+
+Es posible descartar valores con el identificador en blanco `_` o no asignarlos cuando no se necesitan:
+```go
+for indice, valor := range slice { }
+for _, valor := range slice { }       // descarta índice
+for indice := range array { }         // solo índice
+for valor := range canal { }          // solo valor (canal)
+```
+
+### Switch
+
+La sentencia `switch` es más general que en C, sin embargo, las expresiones no deben ser constantes o enteros, y los casos se evalúan de arriba hacia abajo hasta que uno se cumple. Si no hay una expresión, se toma como `true`:
+```go
+switch variable {
+case "valor1":
+    return true
+case "valor2":
+    return false
+default:
+    return false
+}
+```
+
+Además **no hay fall through automático**, pero se pueden agrupar múltiples casos separados por comas:
+```go
+switch c {
+case ' ', '?', '&', '=':
+    return true
+}
+```
+
+O, si es necesario forzar fall through entre casos, se debe usar la palabra reservada `fallthrough`:
+```go
+switch x {
+case 1:
+    fmt.Println("uno")
+    fallthrough
+case 2:
+    fmt.Println("dos")
+}
+```
+
+### Switch de tipo
+
+La sentencia `switch` también puede descubrir el tipo dinámico de una variable de tipo interfaz usando la sintaxis parecida a una aserción de tipo, pero con la palabra reservada `type`:
+```go
+switch t := t.(type) {
+case bool:
+    return "booleana"
+case string:
+    return "string"
+case int:
+    return "int"
+default:
+    return "inesperado"
+}
+```
+
+La reasignación `t := t.(type)` permite usar `t` con su tipo específico en cada uno de los casos.
+
+## Funciones
 
 ## Referencias
+
 - ["Documentation"](https://go.dev/doc/)
 - ["A Tour of Go"](https://go.dev/tour)
 - ["How to Write Go Code"](https://go.dev/doc/code)
