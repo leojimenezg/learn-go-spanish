@@ -279,6 +279,12 @@
 - Switch
 - Switch de tipo
 
+### Funciones
+
+- Múltiples valores de retorno
+- Parámetros nombrados de resultado 
+- Defer
+
 ## Referencias
 
 ---
@@ -2749,6 +2755,59 @@ default:
 La reasignación `t := t.(type)` permite usar `t` con su tipo específico en cada uno de los casos.
 
 ## Funciones
+
+### Múltiples valores de retorno
+
+Go permite que funciones y métodos retornen múltiples valores en una sola llamada. Por lo tanto, el patrón idiomático para manejo de errores es retornar el resultado seguido de un objeto tipo `error` como último valor. Esto evita prácticas raras como devolver -1 o EOF para indicar error.
+
+Ejemplo:
+```go
+func Open(name string) (*File, error) {
+    // ...
+}
+```
+
+### Parámetros nombrados de resultado
+
+Los valores de retorno pueden tener nombres, al igual que variables normales. Cuando están nombrados, se inicializan con su **valor cero** al inicio de la función, y, si la función retorna sin especificar valores, se usan automáticamente los parámetros nombrados. Nombrar los valores de retorno no es obligatorio, pero mejora la claridad y sirve como documentación.
+
+Ejemplo:
+```go
+func ReadFull(r Reader, buf []byte) (n int, err error) {
+    for len(buf) > 0 {
+        nn, e := r.Read(buf)
+        if e != nil {
+            err = e
+            break
+        }
+        n += nn
+        buf = buf[nn:]
+    }
+    return  // retorna "n" y "err" automáticamente
+}
+```
+
+### Defer
+
+La sentencia `defer` programa una función para que se ejecute inmediatamente antes de que la función actual finalice o retorne. Es útil para liberar recursos o ejecutar acciones independientemente del flujo.
+
+Los argumentos de la función diferida se evalúan **cuando `defer` se ejecuta, no cuando la función se ejecuta**. Esto provoca que los valores se "congelen". Además, las funciones defer se ejecutan en orden **LIFO** (Last-In, First-Out).
+
+Ejemplo:
+```go
+for i := 0; i < 3; i++ {
+    defer fmt.Println(i)  // congelará 0, 1, 2
+}
+// Imprime: 2, 1, 0 (orden LIFO)
+// Sin congelación, todas las llamadas imprimirían 3
+
+```
+
+**Otras características:**
+- Un `return` dentro de una función defer no afecta el retorno de la función que la contiene
+- Para manejar panics, usa `recover()` dentro de un `defer`
+
+## Datos
 
 ## Referencias
 
