@@ -262,6 +262,15 @@
 
 ### Comentarios
 
+### Nombres
+
+- Nombres de paquetes
+- Getters y Setters
+- Nombres de interfaces
+- MixedCaps
+
+### Punto y coma
+
 ## Referencias
 
 ---
@@ -2505,6 +2514,111 @@ Además, existen herramientas como `godoc` o `go doc`, que procesan automáticam
 - **Múltiples párrafos:** Debe usar comentarios de una línea (`//`) y separar las explicaciones con comentarios en blanco
 
 ## Nombres
+
+Los nombres en Go tienen efecto semántico: la visibilidad de un nombre fuera de su paquete está determinada por su primer carácter (mayúscula = exportado, minúscula = no exportado).
+
+### Nombres de paquetes
+
+Cuando un paquete se importa, su nombre se convierte en un identificador calificado para acceder a su contenido exportado.
+
+**Convenciones para nombres de paquetes:**
+- Deben estar en **minúsculas**, ser de **una sola palabra** y no **sin guiones bajos**
+- No necesitan ser únicos globalmente; si hay colisiones, asigna un alias local
+- El nombre del paquete corresponde a la **última parte de la ruta**: `encoding/base64` se importa como tal, pero el nombre es `base64`
+
+La ventaja de estas convenciones es que el nombre del paquete proporciona contexto claro. Múltiples paquetes pueden exportar `Reader` sin conflicto: `io.Reader` vs `bufio.Reader` son distintos.
+
+### Getters y Setters
+
+Go no proporciona soporte automático para getters/setters porque no es idiomático. En su lugar, usa el sistema de visibilidad (mayúsculas/minúsculas) para control explícito.
+
+Por ejemplo, para exponer un campo privado de forma controlada, se crea un método con el mismo nombre pero con su primer caracter en mayúsculas.
+
+Ejemplo:
+```go
+type Usuario struct {
+    nombre string // privado
+}
+
+// Getter idiomático (sin prefijo "Get")
+func (u *Usuario) Nombre() string {
+    return u.nombre
+}
+
+// Setter
+func (u *Usuario) SetNombre(n string) {
+    u.nombre = n
+}
+```
+
+### Nombres de interfaces
+
+Por convención, las interfaces se nombran con el nombre de su(s) método(s) más el sufijo `er`:
+
+Ejemplo:
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+Para interfaces compuestas, se concatenan los nombres de las interfaces existentes.
+
+Ejemplo:
+```go
+type ReadWriter interface {
+    Reader
+    Writer
+}
+
+type ReadCloser interface {
+    Reader
+    Closer
+}
+```
+
+### MixedCaps
+
+La convención de Go para nombres es usar **MixedCaps** (mezcla de mayúsculas y minúsculas), evitando guiones bajos.
+
+- **Mayúscula inicial** (`MixedCaps`): exportado fuera del paquete
+- **Minúscula inicial** (`mixedCaps`): no exportado, solo visible dentro del paquete
+
+## Punto y Coma
+
+Al igual que C, la gramática formal de Go utiliza el punto y coma `;` para finalizar las sentencias, pero no aparecen en el código. En su lugar, el analizador léxico sigue una regla para insertar el punto y coma automáticamente al escanear el código fuente.
+
+**Regla:** Si el último token antes de una nueva línea es un identificador, una literal básica o uno de los tokens `break`, `continue`, `fallthrough`, `return`, `++`, `--`, `)`, `}`, el analizador léxico siempre insertará un punto y coma inmediatamente después de dicho token.
+
+Esta regla se resume como: "Si la nueva línea está después de un token que podría finalizar una sentencia, se agrega un punto y coma".
+
+Programas idiomáticos de Go prácticamente no tienen puntos y comas, únicamente en lugares donde verdaderamente marcan una diferencia, como en bucles `for` (con sus tres partes) o múltiples sentencias en una sola línea.
+
+Una consecuencia de la regla para insertar puntos y coma es que no se puede poner la llave de apertura de una sentencia en una nueva línea, pues se insertaría un punto y coma y el comportamiento se vería afectado.
+
+Ejemplo:
+- Forma correcta:
+    ```go
+    if i < f() {
+        g()
+    }
+    ```
+
+- Forma incorrecta:
+    ```go
+    if i < f() 
+    {
+        g()
+    }
+    ```
+
+En el segundo caso, se inserta `;` después de `f()`, dejando las llaves desligadas de la condición.
+
+## Estructuras de control
 
 ## Referencias
 - ["Documentation"](https://go.dev/doc/)
