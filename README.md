@@ -285,6 +285,18 @@
 - Parámetros nombrados de resultado 
 - Defer
 
+### Datos
+
+- Asignación con new
+- Constructores y literales compuestas
+- Asignación con make
+- Arreglos
+- Slices
+- Slices de dos dimensiones
+- Mapas
+- Imprimir
+- Append
+
 ## Referencias
 
 ---
@@ -2808,6 +2820,118 @@ for i := 0; i < 3; i++ {
 - Para manejar panics, usa `recover()` dentro de un `defer`
 
 ## Datos
+
+### Asignación con new
+
+Go tiene dos funciones integradas para la asignación de memoria: `new` y `make`. La función `new` asigna memoria para cierto tipo, la inicializa con su valor cero correspondiente y retorna su dirección.
+
+Debido a que la memoria asignada contiene valores cero (zeroed), está lista para usar sin inicialización adicional.
+
+### Constructores y literales compuestas
+
+A veces asignar un valor cero no es suficiente, por lo que un constructor inicializador hace que el espacio de memoria sea usable.
+
+Ejemplo tradicional:
+```go
+func NewFile(fd int, name string) *File {
+    if fd < 0 {
+        return nil
+    }
+    f := new(File)
+    f.fd = fd
+    f.name = name
+    f.dirinfo = nil
+    f.nepipe = 0
+    return f
+}
+```
+
+Las **literales compuestas** logran lo mismo de forma más concisa: crean una nueva instancia y asignan valores simultáneamente.
+```go
+func NewFile(fd int, name string) *File {
+    if fd < 0 {
+        return nil
+    }
+    return &File{fd, name, nil, 0}
+}
+```
+
+Los campos se asignan en orden de declaración o por nombre, y los campos omitidos toman su valor cero. En Go, es válido retornar la dirección de una variable local, pues el **escape analysis** del compilador detecta variables usadas fuera de su scope y las coloca en memoria que persiste tras el return de la función.
+
+### Asignación con make
+
+La función `make` solo funciona con slices, mapas y canales, retornando el valor completamente inicializado (no un puntero). A diferencia de `new`, `make` inicializa los metadatos internos requeridos por estas estructuras:
+- **Slices**: inicializa el descriptor (puntero, longitud, capacidad)
+- **Mapas**: inicializa la tabla hash interna
+- **Canales**: inicializa el buffer y sincronización
+
+### Arreglos
+
+Los arreglos son útiles cuando se necesita control detallado de memoria o garantizar tamaño fijo. Sus principales características son:
+- Se copian completos al asignarlos (por valor)
+- Al pasarlos a funciones, se recibe una copia, no un puntero
+- El tamaño es parte del tipo: `[3]int` y `[4]int` son tipos diferentes
+
+En la mayoría de casos, usa slices en lugar de arreglos, pues usar punteros a arreglos no es idiomático en Go.
+
+### Slices
+
+Los slices envuelven arreglos para proporcionar una interfaz más general, poderosa y conveniente, y en la mayoría de casos, se prefiere usar slices sobre arreglos.
+
+Un slice contiene una referencia a un arreglo subyacente, incluso, múltiples slices pueden compartir el mismo arreglo subyacente.
+
+- **Longitud** (`len`): elementos actuales
+- **Capacidad** (`cap`): máxima longitud del arreglo subyacente
+
+Si un slice sobrepasa su capacidad, se reasigna el arreglo subyacente.
+
+### Slices de dos dimensiones
+
+Los arreglos y slices en Go son unidimensionales. Para 2D, es necesario crear arreglos de arreglos o slices de slices:
+
+```go
+type Transform [3][3]float64  // Array 3x3 (tamaño fijo)
+type LinesOfText [][]byte     // Slice de slices (dinámico)
+```
+
+### Mapas
+
+Un mapa asocia valores de un tipo (clave) con valores de otro tipo. La clave puede ser cualquier tipo con `==` definido: enteros, strings, punteros, etc. Los slices no pueden ser claves (no tienen `==`).
+
+Los mapas se usan por referencia, y pueden ser construidos con literales compuestas:
+```go
+m := map[string]int{"a": 1, "b": 2}
+```
+
+Acceder a una clave inexistente devuelve el valor cero del tipo. Entonces, para distinguir entre "clave ausente" y "clave presente con valor cero", se usa la sintaxis **"comma ok"**:
+```go
+m := map[string]int{"a": 0}
+v, ok := m["a"]      // v = 0, ok = true
+v, ok := m["inexistente"]  // v = 0, ok = false
+```
+
+Sin `ok`, ambos casos darían el mismo resultado.
+
+Para borrar una entrada, usa `delete(mapa, clave)`, esto es seguro incluso si la clave no existe.
+
+### Imprimir
+
+El paquete `fmt` proporciona funciones para imprimir con formato.
+
+### Append
+
+La función integrada `append` agrega elementos al final de un slice y retorna el resultado:
+```go
+func append(slice []T, elements ...T) []T
+```
+
+El arreglo subyacente puede cambiar si se sobrepasa la capacidad. Por ello, **se debe reasignar el resultado**:
+```go
+s := []int{1, 2}
+s = append(s, 3, 4)  // reasignación necesaria
+```
+
+## Inicialización
 
 ## Referencias
 
