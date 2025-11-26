@@ -297,6 +297,16 @@
 - Imprimir
 - Append
 
+### Inicialización
+
+- Constantes
+- Variables
+- Función init
+
+### Métodos
+
+- Punteros vs. Valores
+
 ## Referencias
 
 ---
@@ -2932,6 +2942,105 @@ s = append(s, 3, 4)  // reasignación necesaria
 ```
 
 ## Inicialización
+
+La inicialización en Go es más poderosa que en otros lenguajes. Estructuras complejas se construyen durante la inicialización, y los problemas de orden entre objetos e incluso paquetes se gestionan correctamente de forma determinística.
+
+### Constantes
+
+Las constantes son exactamente eso: constantes. Se crean en tiempo de compilación incluso si se definen dentro de funciones. Solo pueden ser números, caracteres (runas), strings o booleanos, ya que estos tipos se pueden computar completamente en tiempo de compilación. Las expresiones que las definen también deben ser constantes.
+
+Las constantes enumeradas pueden ser creadas con `iota`, que asigna valores consecutivos:
+```go
+const (
+    A = iota    // 0
+    B           // 1 (hereda iota del anterior)
+    C = iota    // 2 (iota sigue incrementando)
+    D           // 3 (hereda iota)
+)
+```
+
+**Comportamiento clave:**
+- `iota` comienza en 0 al inicio de cada bloque `const`
+- Dentro del mismo bloque, `iota` incrementa en cada línea
+- Si una línea no usa `iota` explícitamente, hereda el valor anterior
+- Si múltiples constantes están en la misma línea, todas toman el mismo valor de `iota`
+
+```go
+const (
+    A = iota    // 0
+    B, C        // 1, 1 (misma línea, mismo iota)
+    D           // 2
+)
+```
+
+### Variables
+
+Las variables se inicializan como constantes, pero sus expresiones y valores se crean en tiempo de ejecución:
+```go
+var (
+    home   = os.Getenv("HOME")
+    user   = os.Getenv("USER")
+    gopath = os.Getenv("GOPATH")
+)
+```
+
+### La función init
+
+Cualquier archivo puede definir funciones niládicas (sin argumentos) llamadas `init` para configurar estado. Incluso, un archivo puede tener múltiples funciones `init`, y se ejecutan en orden textual (orden en que aparecen en el código).
+```go
+func init() {
+    // configuración inicial
+}
+```
+
+Las funciones `init` se ejecutan una vez que:
+1. Todos los paquetes importados han sido inicializados
+2. Todas las declaraciones de variables del paquete han sido evaluadas
+
+Un uso común de `init` es verificar, reparar o asegurar que el estado del programa sea correcto antes de la ejecución real.
+
+## Métodos
+
+### Punteros vs. Valores
+
+Los métodos pueden definirse para cualquier tipo nombrado (excepto punteros e interfaces). Un método es una función con un **receiver**, que es el tipo sobre el cual opera.
+```go
+type ByteSlice []byte
+
+func (slice ByteSlice) Append(data []byte) []byte {
+    // slice es el receiver por valor
+    return append(slice, data...)
+}
+```
+La diferencia principal es si el método puede modificar el original:
+
+**Receiver por valor:** Pueden invocarse en valores y punteros
+
+```go
+func (slice ByteSlice) Append(data []byte) []byte {
+    // Recibe una COPIA de ByteSlice
+    // No puede modificar el original
+    // Debe retornar el resultado
+    return append(slice, data...)
+}
+```
+
+**Receiver por puntero:** Solo pueden invocarse en punteros
+```go
+func (p *ByteSlice) Append(data []byte) {
+    // Recibe la DIRECCIÓN de ByteSlice
+    // Puede modificar el original directamente
+    slice := *p
+    slice = append(slice, data...)
+    *p = slice  // Modifica el original
+}
+```
+
+Esto previene un error común, pues si permitiera invocar un método de puntero en un valor, recibiría una copia y las modificaciones se perderían.
+
+Si el valor es **addressable** (tiene una dirección de memoria), el compilador convierte automáticamente un método de puntero invocado en un valor. Esto solo ocurre para valores addressables (variables, no resultados de expresiones).
+
+## Interfaces y otros tipos
 
 ## Referencias
 
