@@ -307,6 +307,16 @@
 
 - Punteros vs. Valores
 
+### Interfaces y otros tipos
+
+- Interfaces
+- Conversiones
+- Conversión de interfaces y aserción de tipos
+- Generalidad
+- Interfaces y métodos
+
+### El identificador en blanco
+
 ## Referencias
 
 ---
@@ -3041,6 +3051,89 @@ Esto previene un error común, pues si permitiera invocar un método de puntero 
 Si el valor es **addressable** (tiene una dirección de memoria), el compilador convierte automáticamente un método de puntero invocado en un valor. Esto solo ocurre para valores addressables (variables, no resultados de expresiones).
 
 ## Interfaces y otros tipos
+
+### Interfaces
+
+Las interfaces en Go especifican el comportamiento de un objeto: si algo puede hacer esto, puede ser usado aquí.
+
+Un tipo implementa una interfaz si tiene todos sus métodos. **Go usa implementación implícita**, pues no hay palabra clave para este comportamiento. El compilador verifica automáticamente si un tipo satisface una interfaz.
+
+Un único tipo puede implementar múltiples interfaces.
+
+### Conversiones
+
+Existen dos tipos de conversiones legales:
+
+**Conversiones sin crear nuevo valor:** Ocurren entre tipos que el compilador considera equivalentes. Solo cambian la "etiqueta" del tipo
+```go
+type MyInt int
+var x MyInt = 5
+y := int(x)  // No crea nuevo valor, solo cambia el tipo
+```
+
+**Conversiones que crean nuevo valor:** Ocurren entre tipos distintos que sí requieren algún cálculo
+```go
+var x int = 3
+y := float64(x)  // Crea un nuevo valor
+```
+
+En Go, es idiomático convertir un tipo a otro para acceder a métodos diferentes, reduciendo así la cantidad de métodos que un solo tipo debe implementar.
+
+### Conversión de interfaces y aserción de tipos
+
+Los **switches de tipo** toman una interfaz y la convierten al tipo de cada caso. Son útiles cuando se espera trabajar con interfaces que pueden tener múltiples tipos.
+```go
+switch v := i.(type) {
+case int:
+    // v es int
+case string:
+    // v es string
+}
+```
+
+Por otro lado, las **aserciones de tipo** extraen un valor de tipo interfaz y lo convierten a un tipo específico. Resulta más conveniente cuando solo interesa un tipo.
+```go
+str, ok := i.(string)  // Notación "comma, ok" segura
+```
+
+Si una aserción de tipo falla sin usar `comma, ok`, ocurre un error en tiempo de ejecución. Con `comma, ok`, si la aserción falla:
+- El valor convertido toma su valor cero
+- La variable `ok` será `false`
+
+### Generalidad
+
+Cuando un tipo existe únicamente para implementar una interfaz sin agregar comportamiento adicional, exportar el tipo es innecesario. En su lugar, es recomendable hacer lo siguiente:
+- Mantener el tipo **privado** (minúscula)
+- Exportar la **interfaz** (mayúscula)
+- Los constructores deben retornar la interfaz, no el tipo concreto
+
+Ejemplo:
+```go
+// Privado
+type byteWriter struct { /* ... */ }
+
+// Pública
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+// Constructor retorna interfaz
+func NewWriter() Writer {
+    return &byteWriter{}
+}
+```
+
+Esto deja claro que el comportamiento (la interfaz) es lo importante.
+
+### Interfaces y Métodos
+
+Prácticamente cualquier tipo nombrado puede tener métodos. Los únicos que **no pueden** tener métodos son:
+- **Punteros**: sería redundante (`*(*T)`)
+- **Interfaces**: ya son abstractas; métodos en interfaces de interfaces no tiene sentido
+
+Esto significa que casi cualquier tipo puede satisfacer una interfaz.
+
+## El identificador en blanco
 
 ## Referencias
 
