@@ -317,6 +317,11 @@
 
 ### El identificador en blanco
 
+- El identificador en blanco en asignaciones múltiples
+- Importaciones y variables sin usar
+- Importar para efectos secundarios
+- Chequeo de interfaces
+
 ## Referencias
 
 ---
@@ -3125,7 +3130,7 @@ func NewWriter() Writer {
 
 Esto deja claro que el comportamiento (la interfaz) es lo importante.
 
-### Interfaces y Métodos
+### Interfaces y métodos
 
 Prácticamente cualquier tipo nombrado puede tener métodos. Los únicos que **no pueden** tener métodos son:
 - **Punteros**: sería redundante (`*(*T)`)
@@ -3134,6 +3139,66 @@ Prácticamente cualquier tipo nombrado puede tener métodos. Los únicos que **n
 Esto significa que casi cualquier tipo puede satisfacer una interfaz.
 
 ## El identificador en blanco
+
+El identificador en blanco (`_`) es una variable especial que descarta cualquier valor de cualquier tipo sin consecuencias. Se usa para cumplir requisitos sintácticos sin crear variables innecesarias.
+
+### El identificador en blanco en asignaciones múltiples
+
+Cuando una asignación múltiple produce valores que no serán usados, usar `_` evita crear variables innecesarias y deja explícito que el valor se descarta:
+```go
+// for range
+for _, valor := range slice {
+    // descarta el índice
+}
+
+// Canales
+_, ok := <-canal  // descarta el valor, verifica si hay más
+
+// Aserciones de tipo
+_, ok := i.(string)  // descarta el valor, verifica que es string
+```
+
+### Importaciones y variables sin usar
+
+En Go, importar un paquete o declarar una variable que no se usa es un **error de compilación**. Esto evita código muerto y acelera la compilación.
+
+Durante desarrollo temprano, cuando se sabe que se usará un paquete pero aún no lo es, es una buena práctica silenciar el error con `_`:
+```go
+import (
+    "fmt"
+    "log"  // Sin usar aún
+)
+
+var _ = log.Printf  // Silencia el error de compilación
+```
+
+La convención es que estas líneas deben estar justo después de la importación y comentadas para recordar corregirlas.
+
+### Importar para efectos secundarios
+
+A veces es necesario importar un paquete solo por sus efectos secundarios (inicialización, registro, etc.) sin usarlo directamente, por lo que se usa `_` como nombre local:
+```go
+import _ "net/http/pprof"
+```
+
+En este caso, cuando `pprof` se importa, registra automáticamente un servidor HTTP (efecto secundario). El `_` deja claro que el paquete se importa únicamente por este efecto.
+
+### Chequeo de interfaces
+
+Para verificar en **tiempo de compilación** que un tipo implementa una interfaz, es posible usar una aserción de tipo con `_`:
+```go
+var _ io.Writer = (*MyWriter)(nil)
+```
+
+Si `MyWriter` no implementa todos los métodos de `io.Writer`, esto produce error de compilación. Es útil como documentación y verificación automática.
+
+```go
+// Verificar que múltiples tipos implementan Reader
+var _ io.Reader = (*File)(nil)
+var _ io.Reader = (*Buffer)(nil)
+```
+
+## Embeber
 
 ## Referencias
 
