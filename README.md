@@ -3200,6 +3200,115 @@ var _ io.Reader = (*Buffer)(nil)
 
 ## Embeber
 
+Go usa **composición** en lugar de herencia. Embeber permite "tomar prestado" implementaciones existentes al embeber tipos dentro de structs o interfaces.
+
+Para embeber interfaces, se debe especificar la interfaz dentro de otra. Solo es posible embeber interfaces en interfaces:
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+type ReadWriter interface {
+    Reader  // Embebe Reader
+    Writer  // Embebe Writer
+}
+```
+
+`ReadWriter` puede hacer lo que `Reader` y `Writer` hacen, formando una **unión de interfaces**.
+
+Si la misma interfaz se embebe indirectamente (a través de otras), los métodos solo necesitan satisfacerse una vez.
+
+Para embeber structs, la sintaxis es similar a declarar un campo, pero sin declarar un nombre:
+```go
+type Reader struct {
+    // ...
+}
+
+type Writer struct {
+    // ...
+}
+
+type ReadWriter struct {
+    *Reader  // Embebe puntero a Reader
+    *Writer  // Embebe puntero a Writer
+}
+```
+
+**Diferencia entre valor y puntero:**
+- Embeber `Reader`: siempre existe con zero values
+- Embeber `*Reader`: puede ser `nil`
+
+Al embeber, tanto **campos como métodos** del tipo interno se promocionan al tipo externo:
+```go
+type Inner struct {
+    X int
+}
+
+func (i *Inner) Method() {
+    i.X++
+}
+
+type Outer struct {
+    Inner
+}
+
+o := Outer{Inner{5}}
+o.X = 10        // acceso directo al campo embebido
+o.Method()      // llamada directa al método embebido
+```
+
+Cuando se invoca un método embebido, el **receiver sigue siendo el tipo interno**, lo que asegura comportamiento correcto y esperado:
+```go
+type Inner struct{ x int }
+func (i *Inner) Increment() { i.x++ }
+
+type Outer struct{ Inner }
+
+o := Outer{Inner{5}}
+o.Increment()  // receiver es Inner, no Outer
+// o.Inner.x ahora es 6
+```
+
+La capacidad de embeber en Go introduce un problema, siendo la duplicación de nombres. Cuando hay duplicación de nombres, se aplican dos reglas:
+
+**Regla 1: Ocultamiento por nivel**
+Un campo o método X en el nivel externo oculta cualquier X en niveles internos:
+```go
+type Inner struct{ X int }
+type Outer struct {
+    Inner
+    X string  // Oculta Inner.X
+}
+
+o := Outer{}
+o.X         // string (nivel externo)
+o.Inner.X   // int (acceso explícito)
+```
+
+**Regla 2: Conflictos al mismo nivel**
+Si el mismo nombre aparece en el mismo nivel de anidación, es un error **solo si se usa**. Si nunca se menciona, está permitido:
+```go
+type A struct{ X int }
+type B struct{ X int }
+type C struct {
+    A
+    B
+    // Ambos tienen X al mismo nivel
+}
+
+c := C{}
+// c.X   // ERROR: ambiguo
+c.A.X    // OK: acceso explícito
+```
+
+Esto evita errores innecesarios en código que funciona sin acceder a campos conflictivos.
+
+## Concurrencia
+
 ## Referencias
 
 - ["Documentation"](https://go.dev/doc/)
