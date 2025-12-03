@@ -322,6 +322,16 @@
 - Importar para efectos secundarios
 - Chequeo de interfaces
 
+### Embeber
+
+### Concurrencia
+
+- Compartir al comunicar
+- Rutinas go (goroutines)
+- Canales
+- Canales de canales
+- Parelización
+
 ## Referencias
 
 ---
@@ -3308,6 +3318,119 @@ c.A.X    // OK: acceso explícito
 Esto evita errores innecesarios en código que funciona sin acceder a campos conflictivos.
 
 ## Concurrencia
+
+### Compartir al comunicar
+
+Go usa un enfoque diferente para la concurrencia: los valores compartidos se pasan mediante canales, nunca se acceden directamente por múltiples goroutines. Solo una goroutine accede al valor a la vez, previniendo race conditions por diseño.
+
+El principio fundamental:
+
+***No te comuniques al compartir memoria; comparte memoria al comunicarte.***
+
+Es decir, en lugar de que múltiples goroutines accedan a una variable compartida (como una cuenta bancaria que todos modifican), se pasa la variable por un canal. Es como pasar una llave física, solo quien la tiene puede usarla.
+
+Este enfoque se origina de *Hoare's Communicating Sequential Processes (CSP)* y puede verse como una generalización segura de tipos de las pipes de Unix.
+
+### Rutinas go (goroutines)
+
+Las goroutines son llamadas así porque términos como threads, coroutines, o procesos conllevan connotaciones imprecisas.
+
+Una goroutine es una función que se ejecuta concurrentemente con otras en el mismo espacio de memoria. Cuando una goroutine finaliza, lo hace silenciosamente sin señales.
+
+**Características:**
+- **Ligeras**: ~2KB de stack inicial (vs ~1-2MB de threads tradicionales)
+- **Económicas**: el costo es apenas mayor a una asignación de stack normal
+- **Dinámicas**: el stack crece/decrece asignando/liberando heap según necesidad
+- **Multiplexadas**: múltiples goroutines se ejecutan en los mismos threads del SO
+
+Si una goroutine se bloquea (I/O, canal), las demás continúan ejecutándose. El runtime maneja la complejidad de gestionar threads.
+
+**Crear una goroutine:**
+```go
+go list.Sort()  // Ejecuta Sort concurrentemente
+
+go func(msg string) {
+    fmt.Println(msg)
+}("hola")  // Función literal (closure)
+```
+
+
+**Ejemplo con closure:**
+```go
+func Anunciar(mensaje string, tiempo time.Duration) {
+    go func() {
+        time.Sleep(tiempo)
+        fmt.Println(mensaje)
+    }()  // Los paréntesis ejecutan la función
+}
+```
+
+Las variables capturadas por el closure permanecen disponibles hasta que la goroutine finalice.
+
+### Canales
+
+Los canales se crean con `make` y actúan como referencias a la estructura subyacente. Un segundo parámetro opcional especifica el tamaño del buffer:
+```go
+ci := make(chan int)            // sin buffer
+cj := make(chan int, 0)         // sin buffer (explícito)
+cs := make(chan *os.File, 100)  // buffer de 100
+```
+
+Los canales sin buffer o síncronos, garantizan sincronización: el emisor y receptor deben estar listos simultáneamente.
+
+- **Receptor**: bloquea hasta que haya datos
+- **Emisor**: bloquea hasta que el receptor reciba el valor
+
+```go
+c := make(chan int)
+go func() {
+    c <- 42  // Bloquea hasta que alguien reciba
+}()
+x := <-c     // Bloquea hasta que alguien envíe
+```
+
+Por otro lado, en los canales con buffer, el emisor solo bloquea cuando el buffer está lleno:
+```go
+c := make(chan int, 2)
+c <- 1  // No bloquea (buffer tiene espacio)
+c <- 2  // No bloquea (buffer tiene espacio)
+c <- 3  // BLOQUEA (buffer lleno)
+```
+
+### Canales de canales
+
+Los canales son valores de primera clase: pueden asignarse, pasarse y usarse como cualquier otro valor.
+
+Un uso común es implementar canales dentro de canales de forma segura:
+```go
+type Request struct {
+    args []int
+    result chan int  // Canal para enviar respuesta
+}
+
+func handler(queue chan *Request) {
+    for req := range queue {
+        // procesar req.args
+        req.result <- sum  // Enviar resultado por canal
+    }
+}
+```
+
+### Paralelización
+
+Si una tarea puede dividirse en partes independientes, puede paralelizarse usando canales para señalizar cuando cada parte finaliza.
+
+**Importante: Concurrencia ≠ Paralelización**
+
+- **Concurrencia**: Estructurar un programa como componentes independientes (diseño)
+  - Ejemplo: servidor web manejando múltiples requests simultáneas
+  
+- **Paralelización**: Ejecutar cálculos de una misma tarea en paralelo (ejecución)
+  - Ejemplo: dividir ordenamiento de array en múltiples partes que corren en paralelo
+
+Go es un **lenguaje concurrente**, no paralelo. Las características de concurrencia facilitan estructurar programas paralelizables, pero el enfoque principal es la concurrencia como herramienta de diseño.
+
+## Errores
 
 ## Referencias
 
