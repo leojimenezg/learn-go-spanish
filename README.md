@@ -78,11 +78,13 @@
 
 ## Sección 2: How to Write Go Code
 
-- Organización del código
-- Tu primer programa
-  - Importar paquetes del mismo módulo
-  - Importar paquetes de módulos externos
-- Pruebas
+### Organización del código
+### Tu primer programa
+
+- Importar paquetes del mismo módulo
+- Importar paquetes de módulos externos
+
+### Pruebas
 
 ## Sección 3: The Go Programming Language Specification
 
@@ -331,6 +333,11 @@
 - Canales
 - Canales de canales
 - Parelización
+
+### Errores
+
+- Panic
+- Recover
 
 ## Referencias
 
@@ -3431,6 +3438,68 @@ Si una tarea puede dividirse en partes independientes, puede paralelizarse usand
 Go es un **lenguaje concurrente**, no paralelo. Las características de concurrencia facilitan estructurar programas paralelizables, pero el enfoque principal es la concurrencia como herramienta de diseño.
 
 ## Errores
+
+Es una práctica recomendada e idiomática de Go que las funciones de librerías o funciones en general retornen algún indicador de error a quien llame a dichas funciones. Como ya se mencionó anteriormente, los retornos de valores múltiples, siendo un `error` el último valor, facilitan esta práctica.
+
+Por convención, todos los errores tienen el tipo `error`, que es una simple interfaz integrada. Esta interfaz minimalista ofrece flexibilidad, permitiendo a los programadores configurar y extender el manejo de errores según las necesidades de su código. Sin embargo, es posible implementar esta interfaz en modelos más completos que ofrezcan mayor contexto sobre un error:
+```go
+// Interfaz integrada
+type error interface {
+    Error() string
+}
+
+// Modelo más completo que implementa error
+type PathError struct {
+    Op   string
+    Path string
+    Err  error  // Error original envuelto (error wrapping)
+}
+
+// Implementación de la interfaz error
+func (e *PathError) Error() string {
+    return e.Op + " " + e.Path + ": " + e.Err.Error()
+}
+```
+
+Este patrón se conoce como **error wrapping** (envolvimiento de errores). Permite agregar contexto adicional (como la operación y ruta) mientras preserva el error original en el campo `Err`.
+
+Al igual que cualquier otra aserción de tipos, es posible realizar aserción de tipos para buscar errores específicos.
+
+### Panic
+
+La forma normal de reportar un error a quien llama a una función es mediante un valor de retorno extra de tipo `error`. Sin embargo, hay ocasiones en las que los errores son irrecuperables y el programa simplemente no puede continuar.
+
+Por ello, existe la función integrada `panic`, que se encarga de crear un error en tiempo de ejecución que detendrá la ejecución del programa. Toma un único argumento de tipo arbitrario (generalmente string) que será mostrado cuando el programa se detenga.
+
+Usar esta función para crear errores en tiempo de ejecución debe evitarse en la medida de lo posible, siempre y cuando el error pueda ser cubierto o solucionado. Los casos legítimos para usar `panic` pueden incluir:
+- Errores de inicialización críticos donde el programa no puede iniciar
+- Bugs de programación (índice fuera de rango, nil pointer dereference)
+- Situaciones "imposibles" que indican un bug en el código
+
+Tratar de cubrir el error siempre es mejor que parar el programa por completo.
+
+### Recover
+
+Cuando la función integrada `panic` es llamada explícitamente o implícitamente con errores de tiempo de ejecución (como indexar fuera de rango o una aserción de tipo fallida), inmediatamente la función donde ocurrió el error es detenida y el stack de la goroutine donde se encuentra empieza a reducirse. Durante esta reducción del stack, se ejecutan todas las funciones `defer` que encuentre en orden LIFO.
+
+Si el stack de la goroutine se vacía por completo, el programa finalizará y ya no se podrá recuperar. Incluso, si hay un panic sin recover en cualquier goroutine terminará todo el programa, no solo esa goroutine. Sin embargo, es posible recuperar el control y reanudar la ejecución normal usando la función integrada `recover`.
+
+Una llamada a la función `recover` detiene la reducción del stack y retorna el argumento pasado a la función `panic`. Pero, ya que únicamente el código que se ejecuta al reducir el stack son las funciones diferidas, `recover` debe estar dentro de `defer` para que funcione correctamente. Si `recover` se llama fuera de una función defer, siempre retorna `nil` porque el código normal es removido del stack durante el pánico.
+```go
+func safeFunction() {
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("Recuperado de:", r)
+            // La ejecución continúa normalmente después de capturar el panic
+        }
+    }()
+    panic("algo salió mal")
+}
+```
+
+Cuando `recover` captura exitosamente un panic, la reducción del stack se detiene y la función que contiene el `defer` continúa su ejecución normalmente.
+
+Sin embargo, si al momento de tratar de recuperar el control cuando hay un error en tiempo de ejecución sucede otro pánico, la reducción del stack continuará como si nada haya detenido el proceso. El segundo pánico reemplaza al primero. Incluso, el mensaje del pánico anterior se reemplazará, pero ambos mensajes de pánico serán mostrados cuando el programa sea detenido.
 
 ## Referencias
 
